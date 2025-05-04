@@ -9,8 +9,16 @@ const productoRoutes = require('./routes/productoRoutes');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Configuración de CORS
+const corsOptions = {
+  origin: ['https://spinzone-frontend.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Rutas
