@@ -72,4 +72,40 @@ npm start
 ├── env-example     # Ejemplo de variables de entorno
 ├── package.json    # Dependencias y scripts
 └── README.md       # Documentación
-``` 
+```
+
+## Configuración para Supabase
+
+Este proyecto ahora utiliza Supabase como base de datos. Para configurarlo:
+
+1. Crea una cuenta en [Supabase](https://supabase.io/)
+2. Crea un nuevo proyecto
+3. Crea las tablas necesarias en Supabase con las siguientes estructuras:
+
+### Tabla `producto`
+```sql
+CREATE TABLE producto (
+  id_producto SERIAL PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  precio DECIMAL(10, 2) NOT NULL,
+  marca VARCHAR(50) NOT NULL,
+  peso VARCHAR(20) NOT NULL,
+  stock INTEGER NOT NULL DEFAULT 0,
+  categoria_id INTEGER NOT NULL
+);
+```
+
+### Variables de entorno
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+```
+# Variables de entorno para Supabase
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu-api-key-supabase
+
+# Variables del servidor
+PORT=3000
+```
+
+Reemplaza `SUPABASE_URL` y `SUPABASE_KEY` con los valores de tu proyecto en Supabase. 
