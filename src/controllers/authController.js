@@ -2,77 +2,86 @@ const supabase = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+// Verificar si la variable de entorno JWT_SECRET está definida
+console.log('JWT_SECRET definido:', !!process.env.JWT_SECRET);
+
 class AuthController {
   async register(req, res) {
     try {
-      const { email, password, nombre } = req.body;
+      const { email, password, nombre, apellido, telefono, direccion } = req.body;
 
-      if (!email || !password || !nombre) {
+      if (!email || !password || !nombre || !apellido || !telefono || !direccion) {
         return res.status(400).json({
           success: false,
-          message: 'Se requieren email, password y nombre'
+          message: 'Se requieren email, password, nombre, apellido, telefono y direccion'
         });
       }
 
-      // Verificar si el usuario ya existe
-      const { data: existingUser } = await supabase
-        .from('users')
+      // Verificar si el cliente ya existe
+      const { data: existingClient } = await supabase
+        .from('cliente')
         .select('*')
         .eq('email', email)
         .single();
 
-      if (existingUser) {
+      if (existingClient) {
         return res.status(400).json({
           success: false,
           message: 'El correo electrónico ya está registrado'
         });
       }
 
-      // Hash de la contraseña
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Crear el usuario
-      const { data: newUser, error: insertError } = await supabase
-        .from('users')
+      // Crear el cliente
+      const { data: newClient, error: insertError } = await supabase
+        .from('cliente')
         .insert([
           {
+            nombre,
+            apellido,
             email,
-            password: hashedPassword,
-            nombre
+            telefono: parseInt(telefono, 10),
+            direccion
           }
         ])
         .select()
         .single();
 
       if (insertError) {
-        console.error('Error al insertar usuario:', insertError);
+        console.error('Error al insertar cliente:', insertError);
         return res.status(500).json({
           success: false,
-          message: 'Error al crear el usuario',
+          message: 'Error al crear el cliente',
           error: insertError.message
         });
       }
 
-      if (!newUser) {
+      if (!newClient) {
         return res.status(500).json({
           success: false,
-          message: 'Error: No se pudo crear el usuario'
+          message: 'Error: No se pudo crear el cliente'
+        });
+      }
+
+      // Verificación de seguridad para JWT_SECRET
+      if (!process.env.JWT_SECRET) {
+        console.error('ERROR: JWT_SECRET no está definido.');
+        return res.status(500).json({
+          success: false,
+          message: 'Error en la configuración del servidor'
         });
       }
 
       // Generar token
       const token = jwt.sign(
-        { userId: newUser.id, email: newUser.email },
-        process.env.JWT_SECRET,
+        { userId: newClient.id_cliente, email: newClient.email },
+        process.env.JWT_SECRET || 'fallback_secret_key',
         { expiresIn: '24h' }
       );
 
-      // Enviar respuesta sin incluir la contraseña
-      const { password: _, ...userWithoutPassword } = newUser;
       res.status(201).json({
         success: true,
         data: {
-          user: userWithoutPassword,
+          user: newClient,
           token
         }
       });
@@ -88,25 +97,16 @@ class AuthController {
 
   async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email } = req.body;
 
-      // Buscar usuario
-      const { data: user, error } = await supabase
-        .from('users')
+      // Buscar cliente
+      const { data: client, error } = await supabase
+        .from('cliente')
         .select('*')
         .eq('email', email)
         .single();
 
-      if (error || !user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Credenciales inválidas'
-        });
-      }
-
-      // Verificar contraseña
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
+      if (error || !client) {
         return res.status(401).json({
           success: false,
           message: 'Credenciales inválidas'
@@ -115,17 +115,15 @@ class AuthController {
 
       // Generar token
       const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        process.env.JWT_SECRET,
+        { userId: client.id_cliente, email: client.email },
+        process.env.JWT_SECRET || 'fallback_secret_key',
         { expiresIn: '24h' }
       );
 
-      // Enviar respuesta sin incluir la contraseña
-      const { password: _, ...userWithoutPassword } = user;
       res.status(200).json({
         success: true,
         data: {
-          user: userWithoutPassword,
+          user: client,
           token
         }
       });
@@ -140,63 +138,32 @@ class AuthController {
   async updateProfile(req, res) {
     try {
       const { userId } = req.user; // Obtenido del middleware de autenticación
-      const { nombre, email, currentPassword, newPassword } = req.body;
+      const { nombre, apellido, email, telefono, direccion } = req.body;
 
-      // Verificar si hay cambio de contraseña
-      if (currentPassword && newPassword) {
-        // Obtener usuario con contraseña
-        const { data: user } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
+      // Actualizar cliente
+      const { error } = await supabase
+        .from('cliente')
+        .update({
+          nombre,
+          apellido,
+          email,
+          telefono: telefono ? parseInt(telefono, 10) : undefined,
+          direccion
+        })
+        .eq('id_cliente', userId);
 
-        // Verificar contraseña actual
-        const validPassword = await bcrypt.compare(currentPassword, user.password);
-        if (!validPassword) {
-          return res.status(401).json({
-            success: false,
-            message: 'La contraseña actual es incorrecta'
-          });
-        }
+      if (error) throw error;
 
-        // Hash de la nueva contraseña
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Actualizar usuario con nueva contraseña
-        const { error } = await supabase
-          .from('users')
-          .update({
-            nombre,
-            email,
-            password: hashedPassword
-          })
-          .eq('id', userId);
-
-        if (error) throw error;
-      } else {
-        // Actualizar usuario sin cambiar contraseña
-        const { error } = await supabase
-          .from('users')
-          .update({
-            nombre,
-            email
-          })
-          .eq('id', userId);
-
-        if (error) throw error;
-      }
-
-      // Obtener usuario actualizado
-      const { data: updatedUser } = await supabase
-        .from('users')
-        .select('id, email, nombre')
-        .eq('id', userId)
+      // Obtener cliente actualizado
+      const { data: updatedClient } = await supabase
+        .from('cliente')
+        .select('*')
+        .eq('id_cliente', userId)
         .single();
 
       res.status(200).json({
         success: true,
-        data: updatedUser
+        data: updatedClient
       });
     } catch (error) {
       res.status(500).json({
@@ -210,17 +177,17 @@ class AuthController {
     try {
       const { userId } = req.user; // Obtenido del middleware de autenticación
 
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, email, nombre')
-        .eq('id', userId)
+      const { data: client, error } = await supabase
+        .from('cliente')
+        .select('*')
+        .eq('id_cliente', userId)
         .single();
 
       if (error) throw error;
 
       res.status(200).json({
         success: true,
-        data: user
+        data: client
       });
     } catch (error) {
       res.status(500).json({
