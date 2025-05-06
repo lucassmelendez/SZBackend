@@ -4,6 +4,7 @@ require('dotenv').config();
 
 // Importar rutas
 const productoRoutes = require('./routes/productoRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 // Crear aplicación Express
 const app = express();
@@ -11,7 +12,7 @@ const port = process.env.PORT || 3000;
 
 // Configuración de CORS
 const corsOptions = {
-  origin: ['https://sz-frontend.vercel.app', 'http://localhost:3000'],
+  origin: ['https://sz-frontend.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   optionsSuccessStatus: 204
@@ -23,12 +24,14 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/productos', productoRoutes);
+app.use('/api/auth', authRoutes);
 
 // Ruta por defecto
 app.get('/', (req, res) => {
   res.json({
     message: 'API de SpinZone - Bienvenido',
     endpoints: {
+      auth: '/api/auth',
       productos: '/api/productos'
     }
   });
@@ -45,4 +48,4 @@ app.use('*', (req, res) => {
 // Iniciar servidor
 app.listen(port, () => {
   console.log(`Servidor corriendo en el puerto ${port}`);
-}); 
+});
