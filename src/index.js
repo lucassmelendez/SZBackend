@@ -12,7 +12,10 @@ const port = process.env.PORT || 3000;
 
 // Configuración de CORS
 const corsOptions = {
-  origin: ['https://sz-frontend.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
+  origin: function(origin, callback) {
+    // Permitir cualquier origen durante desarrollo
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   optionsSuccessStatus: 204
