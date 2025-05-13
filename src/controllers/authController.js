@@ -8,12 +8,12 @@ console.log('JWT_SECRET definido:', !!process.env.JWT_SECRET);
 class AuthController {
   async register(req, res) {
     try {
-      const { email, password, nombre, apellido, telefono, direccion } = req.body;
+      const { correo, contrasena, nombre, apellido, telefono, direccion } = req.body;
 
-      if (!email || !password || !nombre || !apellido || !telefono || !direccion) {
+      if (!correo || !contrasena || !nombre || !apellido || !telefono || !direccion) {
         return res.status(400).json({
           success: false,
-          message: 'Se requieren email, password, nombre, apellido, telefono y direccion'
+          message: 'Se requieren correo, contrasena, nombre, apellido, telefono y direccion'
         });
       }
 
@@ -21,7 +21,7 @@ class AuthController {
       const { data: existingClient } = await supabase
         .from('cliente')
         .select('*')
-        .eq('email', email)
+        .eq('correo', correo)
         .single();
 
       if (existingClient) {
@@ -38,7 +38,8 @@ class AuthController {
           {
             nombre,
             apellido,
-            email,
+            correo,
+            contrasena,
             telefono: parseInt(telefono, 10),
             direccion
           }
@@ -73,7 +74,7 @@ class AuthController {
 
       // Generar token
       const token = jwt.sign(
-        { userId: newClient.id_cliente, email: newClient.email },
+        { userId: newClient.id_cliente, correo: newClient.correo },
         process.env.JWT_SECRET || 'fallback_secret_key',
         { expiresIn: '24h' }
       );
@@ -97,13 +98,13 @@ class AuthController {
 
   async login(req, res) {
     try {
-      const { email } = req.body;
+      const { correo, contrasena } = req.body;
 
       // Buscar cliente
       const { data: client, error } = await supabase
         .from('cliente')
         .select('*')
-        .eq('email', email)
+        .eq('correo', correo)
         .single();
 
       if (error || !client) {
@@ -113,9 +114,17 @@ class AuthController {
         });
       }
 
+      // Verificar contraseña
+      if (client.contrasena !== contrasena) {
+        return res.status(401).json({
+          success: false,
+          message: 'Credenciales inválidas'
+        });
+      }
+
       // Generar token
       const token = jwt.sign(
-        { userId: client.id_cliente, email: client.email },
+        { userId: client.id_cliente, correo: client.correo },
         process.env.JWT_SECRET || 'fallback_secret_key',
         { expiresIn: '24h' }
       );
@@ -138,7 +147,7 @@ class AuthController {
   async updateProfile(req, res) {
     try {
       const { userId } = req.user; // Obtenido del middleware de autenticación
-      const { nombre, apellido, email, telefono, direccion } = req.body;
+      const { nombre, apellido, correo, telefono, direccion } = req.body;
 
       // Actualizar cliente
       const { error } = await supabase
@@ -146,7 +155,7 @@ class AuthController {
         .update({
           nombre,
           apellido,
-          email,
+          correo,
           telefono: telefono ? parseInt(telefono, 10) : undefined,
           direccion
         })
@@ -188,6 +197,25 @@ class AuthController {
       res.status(200).json({
         success: true,
         data: client
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  async logout(req, res) {
+    try {
+      // En un sistema de tokens JWT simple, no es necesario realizar acciones
+      // en el servidor, pero podríamos implementar una lista negra de tokens
+      // o registrar el cierre de sesión si es necesario en el futuro
+      
+      res.status(200).json({
+        success: true,
+        message: 'Sesión cerrada correctamente',
+        data: null
       });
     } catch (error) {
       res.status(500).json({
