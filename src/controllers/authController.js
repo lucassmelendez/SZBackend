@@ -8,12 +8,15 @@ console.log('JWT_SECRET definido:', !!process.env.JWT_SECRET);
 class AuthController {
   async register(req, res) {
     try {
-      const { correo, contrasena, nombre, apellido, telefono, direccion } = req.body;
+      const { correo, contrasena, nombre, apellido, telefono, direccion, rut } = req.body;
 
-      if (!correo || !contrasena || !nombre || !apellido || !telefono || !direccion) {
+      // Imprimir todos los datos recibidos para depuración
+      console.log('Datos recibidos en register:', req.body);
+
+      if (!correo || !contrasena || !nombre || !apellido || !telefono || !direccion || !rut) {
         return res.status(400).json({
           success: false,
-          message: 'Se requieren correo, contrasena, nombre, apellido, telefono y direccion'
+          message: 'Se requieren correo, contrasena, nombre, apellido, telefono, direccion y rut'
         });
       }
 
@@ -41,7 +44,8 @@ class AuthController {
             correo,
             contrasena,
             telefono: parseInt(telefono, 10),
-            direccion
+            direccion,
+            rut
           }
         ])
         .select()
