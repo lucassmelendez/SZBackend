@@ -17,12 +17,38 @@ const port = process.env.PORT || 3000;
 // Configuración de CORS
 const corsOptions = {
   origin: function(origin, callback) {
-    // Permitir cualquier origen durante desarrollo
-    callback(null, true);
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:8000',
+      'https://szfast-api.vercel.app',
+      'https://sz-frontend.vercel.app',
+      // Añadir aquí otros dominios si es necesario
+    ];
+    
+    // Permitir solicitudes sin origen (como solicitudes de móviles o postman)
+    if (!origin) return callback(null, true);
+    
+    // Permitir cualquier origen en desarrollo
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('CORS: Permitiendo origen en desarrollo:', origin);
+      return callback(null, true);
+    }
+    
+    // En producción, verificar que el origen está en la lista permitida
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('CORS: Origen permitido:', origin);
+      return callback(null, true);
+    } else {
+      console.log('CORS: Origen rechazado:', origin);
+      return callback(null, true); // Seguir permitiendo por ahora, cambiar a false para rechazar
+    }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  preflightContinue: false, // Para evitar problemas con redirecciones en preflight
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
 // Middleware
