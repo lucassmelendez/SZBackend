@@ -31,8 +31,12 @@ exports.iniciarTransaccion = async (req, res) => {
         const baseUrl = getWebpayBaseUrl();
         console.log(`Usando URL base de Webpay: ${baseUrl}`);
 
-        // Inicializar transacción en WebPay usando Transaction.create
-        const response = await WebpayPlus.Transaction.create(
+        // En la versión 6.0.0 del SDK, la creación de transacción se realiza así:
+        // Crear una nueva instancia de Transaction
+        const transaction = new WebpayPlus.Transaction();
+        
+        // Crear la transacción usando create()
+        const response = await transaction.create(
             buyOrder, 
             sessionId, 
             amount, 
@@ -86,8 +90,11 @@ exports.confirmarTransaccion = async (req, res) => {
             });
         }
 
-        // Confirmar transacción usando Transaction.commit
-        const response = await WebpayPlus.Transaction.commit(token_ws);
+        // En la versión 6.0.0, usamos una instancia de Transaction
+        const transaction = new WebpayPlus.Transaction();
+        
+        // Confirmar transacción
+        const response = await transaction.commit(token_ws);
         console.log('Respuesta de confirmación:', response);
 
         if (response.status === 'AUTHORIZED') {
@@ -183,7 +190,9 @@ exports.manejarTransaccionAbortada = async (req, res) => {
         if (TBK_TOKEN) {
             // Consultar estado de la transacción (opcional)
             try {
-                const status = await WebpayPlus.Transaction.status(TBK_TOKEN);
+                // En versión 6.0.0, usamos una instancia de Transaction
+                const transaction = new WebpayPlus.Transaction();
+                const status = await transaction.status(TBK_TOKEN);
                 console.log('Estado de transacción abortada:', status);
             } catch (error) {
                 console.error('Error al consultar estado de transacción abortada:', error);

@@ -11,18 +11,10 @@ const INTEGRATION_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB566103322646
 // Configuración para ambiente de integración
 const configureWebpayIntegration = () => {
     try {
-        // En la versión actual del SDK, WebpayPlus.configureForTesting() 
-        // configura automáticamente las credenciales de integración
-        WebpayPlus.configureForTesting();
+        // En la versión 6.0.0 del SDK, la configuración ha cambiado
+        // WebpayPlus se configura directamente, sin necesidad de acceder a Transaction
+        WebpayPlus.configureForIntegration(INTEGRATION_COMMERCE_CODE, INTEGRATION_API_KEY);
         
-        // También podemos configurar manualmente con los valores de integración
-        // Código de comercio de integración
-        const commerceCode = INTEGRATION_COMMERCE_CODE;
-        const apiKey = INTEGRATION_API_KEY;
-        
-        // Configurar explícitamente (alternativa a configureForTesting)
-        // WebpayPlus.Transaction.configureForIntegration(commerceCode, apiKey);
-
         console.log(`WebpayPlus configurado correctamente en modo integración. URL: ${WEBPAY_INTEGRATION_URL}`);
     } catch (error) {
         console.error('Error al configurar WebpayPlus para integración:', error);
@@ -45,8 +37,8 @@ const configureWebpayProduction = () => {
         }
         
         // Configurar WebpayPlus con las credenciales de producción
-        // En versiones recientes, WebpayPlus usa Transaction.configureForProduction()
-        WebpayPlus.Transaction.configureForProduction(commerceCode, apiKey);
+        // En la versión 6.0.0, la configuración es directamente en WebpayPlus
+        WebpayPlus.configureForProduction(commerceCode, apiKey);
         console.log(`WebpayPlus configurado correctamente en modo producción. URL: ${WEBPAY_PRODUCTION_URL}`);
     } catch (error) {
         console.error('Error al configurar WebpayPlus para producción:', error);
