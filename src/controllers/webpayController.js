@@ -1,5 +1,13 @@
 const { WebpayPlus } = require('transbank-sdk');
 const supabase = require('../config/db');
+const { WEBPAY_INTEGRATION_URL, WEBPAY_PRODUCTION_URL } = require('../config/webpayConfig');
+
+// Función auxiliar para obtener URL base según entorno
+const getWebpayBaseUrl = () => {
+    return process.env.NODE_ENV === 'production' 
+        ? WEBPAY_PRODUCTION_URL 
+        : WEBPAY_INTEGRATION_URL;
+};
 
 // Iniciar transacción en WebPay
 exports.iniciarTransaccion = async (req, res) => {
@@ -20,13 +28,18 @@ exports.iniciarTransaccion = async (req, res) => {
             });
         }
 
-        // Inicializar transacción en WebPay
+        const baseUrl = getWebpayBaseUrl();
+        console.log(`Usando URL base de Webpay: ${baseUrl}`);
+
+        // Inicializar transacción en WebPay usando Transaction.create
         const response = await WebpayPlus.Transaction.create(
             buyOrder, 
             sessionId, 
             amount, 
             returnUrl
         );
+
+        console.log('Transacción iniciada:', response);
 
         // Guardamos los datos de la orden para usarlos después
         const { error } = await supabase
@@ -73,8 +86,9 @@ exports.confirmarTransaccion = async (req, res) => {
             });
         }
 
-        // Confirmar transacción
+        // Confirmar transacción usando Transaction.commit
         const response = await WebpayPlus.Transaction.commit(token_ws);
+        console.log('Respuesta de confirmación:', response);
 
         if (response.status === 'AUTHORIZED') {
             // Buscar datos de la transacción pendiente
