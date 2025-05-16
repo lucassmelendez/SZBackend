@@ -23,6 +23,8 @@ const corsOptions = {
       'http://localhost:8000',
       'https://szfast-api.vercel.app',
       'https://sz-frontend.vercel.app',
+      'https://sz-frontend-git-main-lucassmelendez.vercel.app',
+      'https://sz-frontend-lucassmelendez.vercel.app',
       // Añadir aquí otros dominios si es necesario
     ];
     
@@ -54,6 +56,21 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Verificar si estamos usando HTTPS
+app.use((req, res, next) => {
+  // Log del protocolo usado
+  console.log(`Protocolo: ${req.protocol}, Headers: ${req.headers['x-forwarded-proto']}`);
+  
+  // Si estamos en producción y usando HTTP, redirigir a HTTPS
+  if (process.env.NODE_ENV === 'production' && 
+      !req.secure && 
+      req.headers['x-forwarded-proto'] !== 'https') {
+    console.log('Redirigiendo a HTTPS');
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
 
 // Configurar WebPay
 configureWebpay();
