@@ -1,6 +1,10 @@
 const { WebpayPlus } = require('transbank-sdk');
 const supabase = require('../config/db');
-const { WEBPAY_INTEGRATION_URL, WEBPAY_PRODUCTION_URL } = require('../config/webpayConfig');
+const { 
+    WEBPAY_INTEGRATION_URL, 
+    WEBPAY_PRODUCTION_URL, 
+    getTransactionInstance 
+} = require('../config/webpayConfig');
 
 // Función auxiliar para obtener URL base según entorno
 const getWebpayBaseUrl = () => {
@@ -31,9 +35,8 @@ exports.iniciarTransaccion = async (req, res) => {
         const baseUrl = getWebpayBaseUrl();
         console.log(`Usando URL base de Webpay: ${baseUrl}`);
 
-        // En la versión 6.0.0 del SDK, la creación de transacción se realiza así:
-        // Crear una nueva instancia de Transaction
-        const transaction = new WebpayPlus.Transaction();
+        // Obtener una instancia configurada de Transaction
+        const transaction = getTransactionInstance();
         
         // Crear la transacción usando create()
         const response = await transaction.create(
@@ -90,8 +93,8 @@ exports.confirmarTransaccion = async (req, res) => {
             });
         }
 
-        // En la versión 6.0.0, usamos una instancia de Transaction
-        const transaction = new WebpayPlus.Transaction();
+        // Obtener una instancia configurada de Transaction
+        const transaction = getTransactionInstance();
         
         // Confirmar transacción
         const response = await transaction.commit(token_ws);
@@ -190,8 +193,8 @@ exports.manejarTransaccionAbortada = async (req, res) => {
         if (TBK_TOKEN) {
             // Consultar estado de la transacción (opcional)
             try {
-                // En versión 6.0.0, usamos una instancia de Transaction
-                const transaction = new WebpayPlus.Transaction();
+                // Obtener una instancia configurada de Transaction
+                const transaction = getTransactionInstance();
                 const status = await transaction.status(TBK_TOKEN);
                 console.log('Estado de transacción abortada:', status);
             } catch (error) {
