@@ -5,6 +5,10 @@ require('dotenv').config();
 // Importar rutas
 const productoRoutes = require('./routes/productoRoutes');
 const authRoutes = require('./routes/authRoutes');
+const webpayRoutes = require('./routes/webpayRoutes');
+
+// Importar configuración de WebPay
+const { configureWebpay } = require('./config/webpayConfig');
 
 // Crear aplicación Express
 const app = express();
@@ -25,9 +29,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Configurar WebPay
+configureWebpay();
+
 // Rutas
 app.use('/api/productos', productoRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/webpay', webpayRoutes);
 
 // Ruta por defecto
 app.get('/', (req, res) => {
@@ -35,7 +43,8 @@ app.get('/', (req, res) => {
     message: 'API de SpinZone - Bienvenido',
     endpoints: {
       auth: '/api/auth',
-      productos: '/api/productos'
+      productos: '/api/productos',
+      webpay: '/api/webpay'
     }
   });
 });
