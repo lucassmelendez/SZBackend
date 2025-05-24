@@ -163,6 +163,41 @@ exports.confirmarTransaccion = async (req, res) => {
                                     console.error('Advertencia: Error al insertar detalles del pedido:', insertDetalleError);
                                 } else {
                                     console.log('Detalles del pedido agregados correctamente');
+                                    
+                                    // Actualizar stock de productos
+                                    try {
+                                        // Para cada producto en el pedido, actualizar su stock
+                                        for (const detalle of detallesPedido) {
+                                            // Obtener el stock actual del producto
+                                            const { data: producto, error: getProductoError } = await supabase
+                                                .from('producto')
+                                                .select('stock')
+                                                .eq('id_producto', detalle.id_producto)
+                                                .single();
+                                                
+                                            if (getProductoError || !producto) {
+                                                console.error(`Advertencia: Error al obtener stock del producto ${detalle.id_producto}:`, getProductoError);
+                                                continue; // Saltar a la siguiente iteración
+                                            }
+                                            
+                                            // Calcular nuevo stock
+                                            const nuevoStock = Math.max(0, producto.stock - detalle.cantidad);
+                                            
+                                            // Actualizar stock en la tabla producto
+                                            const { error: updateStockError } = await supabase
+                                                .from('producto')
+                                                .update({ stock: nuevoStock })
+                                                .eq('id_producto', detalle.id_producto);
+                                                
+                                            if (updateStockError) {
+                                                console.error(`Advertencia: Error al actualizar stock del producto ${detalle.id_producto}:`, updateStockError);
+                                            } else {
+                                                console.log(`Stock actualizado para producto ${detalle.id_producto}: ${producto.stock} -> ${nuevoStock}`);
+                                            }
+                                        }
+                                    } catch (stockError) {
+                                        console.error('Advertencia: Error al actualizar stock de productos:', stockError);
+                                    }
                                 }
                             } catch (detalleError) {
                                 console.error('Advertencia: Error al procesar detalles del pedido:', detalleError);
