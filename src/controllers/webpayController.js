@@ -126,77 +126,53 @@ exports.confirmarTransaccion = async (req, res) => {
                     console.error('Advertencia: No se encontró la transacción pendiente:', selectError);
                     // Continuar sin datos de la transacción pendiente
                 } else {
-                    // Verificar si ya existe un pedido para esta orden de compra
-                    const { data: pedidoExistente, error: checkPedidoError } = await supabase
-                        .from('pedido')
-                        .select('id_pedido')
-                        .eq('id_cliente', transaccion.user_id)
-                        .order('id_pedido', { ascending: false })
-                        .limit(1);
-                    
-                    // Verificar si el pedido fue creado en los últimos 5 minutos (300000 ms)
-                    const pedidoReciente = pedidoExistente && pedidoExistente.length > 0 && 
-                                          (Date.now() - new Date(pedidoExistente[0].fecha).getTime() < 300000);
-                    
-                    console.log('Verificación de pedido existente:', { 
-                        pedidoExistente, 
-                        pedidoReciente,
-                        tiempoTranscurrido: pedidoExistente && pedidoExistente.length > 0 ? 
-                            (Date.now() - new Date(pedidoExistente[0].fecha).getTime()) / 1000 + ' segundos' : 'N/A'
-                    });
+                    // Intentar crear el pedido en la base de datos usando la estructura correcta de la tabla 'pedido'
+                    try {
+                        const { data: pedido, error: insertPedidoError } = await supabase
+                            .from('pedido')
+                            .insert({
+                                fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+                                medio_pago_id: 2, // WebPay
+                                id_estado_envio: 1, // Estado inicial de envío
+                                id_estado: 1, // Estado inicial de pedido
+                                id_cliente: transaccion.user_id // El user_id es equivalente al id_cliente
+                            })
+                            .select()
+                            .single();
 
-                    if (pedidoReciente) {
-                        console.log('Se encontró un pedido reciente. No se creará uno nuevo:', pedidoExistente[0]);
-                        resultado.pedidoId = pedidoExistente[0].id_pedido;
-                    } else {
-                        // Intentar crear el pedido en la base de datos usando la estructura correcta de la tabla 'pedido'
-                        try {
-                            const { data: pedido, error: insertPedidoError } = await supabase
-                                .from('pedido')
-                                .insert({
-                                    fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
-                                    medio_pago_id: 2, // WebPay
-                                    id_estado_envio: 1, // Estado inicial de envío
-                                    id_estado: 1, // Estado inicial de pedido
-                                    id_cliente: transaccion.user_id // El user_id es equivalente al id_cliente
-                                })
-                                .select()
-                                .single();
+                        if (insertPedidoError) {
+                            console.error('Advertencia: Error al crear pedido:', insertPedidoError);
+                        } else {
+                            console.log('Pedido creado correctamente:', pedido);
+                            
+                            // Intentar insertar detalles del pedido en la tabla 'pedido_producto'
+                            try {
+                                const detallesPedido = transaccion.items.map(item => ({
+                                    cantidad: item.cantidad,
+                                    precio_unitario: item.precio,
+                                    subtotal: item.precio * item.cantidad,
+                                    id_pedido: pedido.id_pedido,
+                                    id_producto: item.id
+                                }));
 
-                            if (insertPedidoError) {
-                                console.error('Advertencia: Error al crear pedido:', insertPedidoError);
-                            } else {
-                                console.log('Pedido creado correctamente:', pedido);
-                                
-                                // Intentar insertar detalles del pedido en la tabla 'pedido_producto'
-                                try {
-                                    const detallesPedido = transaccion.items.map(item => ({
-                                        cantidad: item.cantidad,
-                                        precio_unitario: item.precio,
-                                        subtotal: item.precio * item.cantidad,
-                                        id_pedido: pedido.id_pedido,
-                                        id_producto: item.id
-                                    }));
+                                const { error: insertDetalleError } = await supabase
+                                    .from('pedido_producto')
+                                    .insert(detallesPedido);
 
-                                    const { error: insertDetalleError } = await supabase
-                                        .from('pedido_producto')
-                                        .insert(detallesPedido);
-
-                                    if (insertDetalleError) {
-                                        console.error('Advertencia: Error al insertar detalles del pedido:', insertDetalleError);
-                                    } else {
-                                        console.log('Detalles del pedido agregados correctamente');
-                                    }
-                                } catch (detalleError) {
-                                    console.error('Advertencia: Error al procesar detalles del pedido:', detalleError);
+                                if (insertDetalleError) {
+                                    console.error('Advertencia: Error al insertar detalles del pedido:', insertDetalleError);
+                                } else {
+                                    console.log('Detalles del pedido agregados correctamente');
                                 }
-
-                                // Añadir el ID del pedido al resultado
-                                resultado.pedidoId = pedido.id_pedido;
+                            } catch (detalleError) {
+                                console.error('Advertencia: Error al procesar detalles del pedido:', detalleError);
                             }
-                        } catch (pedidoError) {
-                            console.error('Advertencia: Error al crear pedido:', pedidoError);
+
+                            // Añadir el ID del pedido al resultado
+                            resultado.pedidoId = pedido.id_pedido;
                         }
+                    } catch (pedidoError) {
+                        console.error('Advertencia: Error al crear pedido:', pedidoError);
                     }
 
                     // Intentar eliminar la transacción pendiente
