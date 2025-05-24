@@ -126,16 +126,16 @@ exports.confirmarTransaccion = async (req, res) => {
                     console.error('Advertencia: No se encontró la transacción pendiente:', selectError);
                     // Continuar sin datos de la transacción pendiente
                 } else {
-                    // Intentar crear el pedido en la base de datos
+                    // Intentar crear el pedido en la base de datos usando la estructura correcta de la tabla 'pedido'
                     try {
                         const { data: pedido, error: insertPedidoError } = await supabase
-                            .from('pedidos')
+                            .from('pedido')
                             .insert({
-                                user_id: transaccion.user_id,
-                                monto_total: transaccion.amount,
-                                medio_pago_id: 2,
-                                id_estado_envio: 2,
-                                id_estado: 1
+                                fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
+                                medio_pago_id: 2, // WebPay
+                                id_estado_envio: 1, // Estado inicial de envío
+                                id_estado: 1, // Estado inicial de pedido
+                                id_cliente: transaccion.user_id // El user_id es equivalente al id_cliente
                             })
                             .select()
                             .single();
@@ -143,28 +143,33 @@ exports.confirmarTransaccion = async (req, res) => {
                         if (insertPedidoError) {
                             console.error('Advertencia: Error al crear pedido:', insertPedidoError);
                         } else {
-                            // Intentar insertar detalles del pedido
+                            console.log('Pedido creado correctamente:', pedido);
+                            
+                            // Intentar insertar detalles del pedido en la tabla 'pedido_producto'
                             try {
                                 const detallesPedido = transaccion.items.map(item => ({
-                                    pedido_id: pedido.id,
-                                    producto_id: item.id,
                                     cantidad: item.cantidad,
-                                    precio_unitario: item.precio
+                                    precio_unitario: item.precio,
+                                    subtotal: item.precio * item.cantidad,
+                                    id_pedido: pedido.id_pedido,
+                                    id_producto: item.id
                                 }));
 
                                 const { error: insertDetalleError } = await supabase
-                                    .from('detalle_pedido')
+                                    .from('pedido_producto')
                                     .insert(detallesPedido);
 
                                 if (insertDetalleError) {
                                     console.error('Advertencia: Error al insertar detalles del pedido:', insertDetalleError);
+                                } else {
+                                    console.log('Detalles del pedido agregados correctamente');
                                 }
                             } catch (detalleError) {
                                 console.error('Advertencia: Error al procesar detalles del pedido:', detalleError);
                             }
 
                             // Añadir el ID del pedido al resultado
-                            resultado.pedidoId = pedido.id;
+                            resultado.pedidoId = pedido.id_pedido;
                         }
                     } catch (pedidoError) {
                         console.error('Advertencia: Error al crear pedido:', pedidoError);
