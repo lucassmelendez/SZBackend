@@ -133,7 +133,7 @@ exports.confirmarTransaccion = async (req, res) => {
                             .insert({
                                 fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD
                                 medio_pago_id: 2, // WebPay
-                                id_estado_envio: 1, // Estado inicial de envío
+                                id_estado_envio: 2, // Estado inicial de envío
                                 id_estado: 1, // Estado inicial de pedido
                                 id_cliente: transaccion.user_id // El user_id es equivalente al id_cliente
                             })
