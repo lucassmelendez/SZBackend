@@ -5,6 +5,7 @@ require('dotenv').config();
 const productoRoutes = require('./routes/productoRoutes');
 const authRoutes = require('./routes/authRoutes');
 const webpayRoutes = require('./routes/webpayRoutes');
+const exchangeRoutes = require('./routes/exchangeRoutes');
 
 const { configureWebpay } = require('./config/webpayConfig');
 
@@ -64,6 +65,7 @@ configureWebpay();
 app.use('/api/productos', productoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/webpay', webpayRoutes);
+app.use('/api/exchange', exchangeRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -71,7 +73,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       productos: '/api/productos',
-      webpay: '/api/webpay'
+      webpay: '/api/webpay',
+      exchange: '/api/exchange'
     }
   });
 });

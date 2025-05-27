@@ -21,6 +21,7 @@ API REST para la plataforma SpinZone, desarrollada con Express.js y Supabase (Po
 - [Seguridad](#seguridad)
 - [Contribución](#contribución)
 - [Licencia](#licencia)
+- [Nuevas Funcionalidades](#nuevas-funcionalidades)
 
 ## ✨ Características
 
@@ -209,3 +210,23 @@ La API estará disponible en: https://sz-backend.vercel.app
 - Las contraseñas se encriptan con bcrypt antes de almacenarse
 - Se implementan cabeceras de seguridad mediante middleware
 - CORS configurado para permitir solo orígenes específicos
+
+## Nuevas Funcionalidades
+
+### API de Conversión de Moneda
+
+Se ha integrado la API del Banco Central de Chile para obtener el valor actualizado del dólar observado y realizar conversiones entre CLP y USD.
+
+#### Endpoints
+
+- `GET /api/exchange/dollar`: Obtiene el valor actual del dólar observado
+- `POST /api/exchange/convert`: Convierte un monto en CLP a USD
+
+#### Variables de entorno requeridas
+
+```
+BCCH_API_USER=usuario@ejemplo.com
+BCCH_API_PASS=contrasena
+```
+
+Debes registrarte en el sitio del Banco Central de Chile para obtener credenciales de acceso a la API.
