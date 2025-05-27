@@ -76,12 +76,6 @@ TRANSBANK_API_KEY=tu_api_key
 TRANSBANK_ENVIRONMENT=TEST  # o PRODUCTION
 ```
 
-### Configuración de Supabase
-
-1. Crea una cuenta en [Supabase](https://supabase.com/)
-2. Crea un nuevo proyecto
-3. En el SQL Editor, ejecuta los siguientes scripts para crear las tablas necesarias:
-
 #### Tabla `productos`
 ```sql
 CREATE TABLE productos (
@@ -197,9 +191,9 @@ Este proyecto está configurado para desplegarse fácilmente en Vercel:
    npm i -g vercel
    ```
 
-2. Despliega:
+2. Iniciar sesion:
    ```bash
-   vercel
+   vercel login
    ```
 
 3. Para despliegue en producción:
@@ -209,9 +203,6 @@ Este proyecto está configurado para desplegarse fácilmente en Vercel:
 
 La API estará disponible en: https://sz-backend.vercel.app
 
-### Despliegue en otros servicios
-
-Para desplegar en otros servicios como Heroku, Railway o Render, sigue la documentación específica de cada plataforma, asegurándote de configurar las variables de entorno correctamente.
 
 ## 🔒 Seguridad
 
@@ -219,19 +210,3 @@ Para desplegar en otros servicios como Heroku, Railway o Render, sigue la docume
 - Las contraseñas se encriptan con bcrypt antes de almacenarse
 - Se implementan cabeceras de seguridad mediante middleware
 - CORS configurado para permitir solo orígenes específicos
-
-## 👥 Contribución
-
-1. Haz un fork del repositorio
-2. Crea una nueva rama (`git checkout -b feature/nueva-funcionalidad`)
-3. Realiza tus cambios y haz commit (`git commit -am 'Añade nueva funcionalidad'`)
-4. Sube tus cambios (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
-
----
-
-Desarrollado con ❤️ para SpinZone © 2024
