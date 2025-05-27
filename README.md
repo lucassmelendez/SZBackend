@@ -29,7 +29,6 @@ API REST para la plataforma SpinZone, desarrollada con Express.js y Supabase (Po
 - Integración con Supabase para almacenamiento de datos
 - Integración con API de Transbank para procesamiento de pagos
 - Sistema de búsqueda y filtrado de productos
-- Endpoints optimizados para rendimiento
 - Manejo centralizado de errores
 
 ## 🔧 Requisitos Previos
@@ -73,7 +72,7 @@ JWT_EXPIRES_IN=24h
 # Configuración Transbank (opcional)
 TRANSBANK_COMMERCE_CODE=tu_codigo_de_comercio
 TRANSBANK_API_KEY=tu_api_key
-TRANSBANK_ENVIRONMENT=TEST  # o PRODUCTION
+TRANSBANK_ENVIRONMENT=INTEGRATION  # o PRODUCTION
 ```
 
 #### Tabla `productos`
@@ -117,7 +116,7 @@ CREATE TABLE usuarios (
 
 ## 🚀 Ejecución
 
-Para iniciar el servidor en modo desarrollo (con recarga automática):
+Para iniciar el servidor en modo desarrollo:
 ```bash
 npm run dev
 ```
