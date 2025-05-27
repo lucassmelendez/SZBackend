@@ -2,7 +2,6 @@ const supabase = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// Verificar si la variable de entorno JWT_SECRET está definida
 console.log('JWT_SECRET definido:', !!process.env.JWT_SECRET);
 
 class AuthController {
@@ -10,7 +9,6 @@ class AuthController {
     try {
       const { correo, contrasena, nombre, apellido, telefono, direccion, rut } = req.body;
 
-      // Imprimir todos los datos recibidos para depuración
       console.log('Datos recibidos en register:', req.body);
 
       if (!correo || !contrasena || !nombre || !apellido || !telefono || !direccion || !rut) {
@@ -20,7 +18,6 @@ class AuthController {
         });
       }
 
-      // Verificar si el cliente ya existe
       const { data: existingClient } = await supabase
         .from('cliente')
         .select('*')
@@ -34,7 +31,6 @@ class AuthController {
         });
       }
 
-      // Crear el cliente
       const { data: newClient, error: insertError } = await supabase
         .from('cliente')
         .insert([
@@ -67,7 +63,6 @@ class AuthController {
         });
       }
 
-      // Verificación de seguridad para JWT_SECRET
       if (!process.env.JWT_SECRET) {
         console.error('ERROR: JWT_SECRET no está definido.');
         return res.status(500).json({
@@ -76,7 +71,6 @@ class AuthController {
         });
       }
 
-      // Generar token
       const token = jwt.sign(
         { userId: newClient.id_cliente, correo: newClient.correo },
         process.env.JWT_SECRET || 'fallback_secret_key',
@@ -104,7 +98,6 @@ class AuthController {
     try {
       const { correo, contrasena } = req.body;
 
-      // Buscar cliente
       const { data: client, error } = await supabase
         .from('cliente')
         .select('*')
@@ -118,7 +111,6 @@ class AuthController {
         });
       }
 
-      // Verificar contraseña
       if (client.contrasena !== contrasena) {
         return res.status(401).json({
           success: false,
@@ -126,7 +118,6 @@ class AuthController {
         });
       }
 
-      // Generar token
       const token = jwt.sign(
         { userId: client.id_cliente, correo: client.correo },
         process.env.JWT_SECRET || 'fallback_secret_key',
@@ -150,10 +141,9 @@ class AuthController {
 
   async updateProfile(req, res) {
     try {
-      const { userId } = req.user; // Obtenido del middleware de autenticación
+      const { userId } = req.user;
       const { nombre, apellido, correo, telefono, direccion } = req.body;
 
-      // Actualizar cliente
       const { error } = await supabase
         .from('cliente')
         .update({
@@ -167,7 +157,6 @@ class AuthController {
 
       if (error) throw error;
 
-      // Obtener cliente actualizado
       const { data: updatedClient } = await supabase
         .from('cliente')
         .select('*')
@@ -188,7 +177,7 @@ class AuthController {
 
   async getProfile(req, res) {
     try {
-      const { userId } = req.user; // Obtenido del middleware de autenticación
+      const { userId } = req.user;
 
       const { data: client, error } = await supabase
         .from('cliente')
@@ -212,10 +201,6 @@ class AuthController {
 
   async logout(req, res) {
     try {
-      // En un sistema de tokens JWT simple, no es necesario realizar acciones
-      // en el servidor, pero podríamos implementar una lista negra de tokens
-      // o registrar el cierre de sesión si es necesario en el futuro
-      
       res.status(200).json({
         success: true,
         message: 'Sesión cerrada correctamente',

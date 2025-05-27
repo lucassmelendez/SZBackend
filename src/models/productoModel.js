@@ -1,7 +1,6 @@
 const supabase = require('../config/db');
 
 class ProductoModel {
-  // Obtener todos los productos
   async getAll() {
     try {
       const { data, error } = await supabase
@@ -15,7 +14,6 @@ class ProductoModel {
     }
   }
 
-  // Obtener un producto por ID
   async getById(id) {
     try {
       const { data, error } = await supabase
@@ -31,7 +29,6 @@ class ProductoModel {
     }
   }
 
-  // Crear un nuevo producto
   async create(producto) {
     try {
       const { nombre, descripcion, precio, marca, peso, stock, categoria_id } = producto;
@@ -57,7 +54,6 @@ class ProductoModel {
     }
   }
 
-  // Actualizar un producto
   async update(id, producto) {
     try {
       const { nombre, descripcion, precio, marca, peso, stock, categoria_id } = producto;
@@ -84,7 +80,6 @@ class ProductoModel {
     }
   }
 
-  // Actualizar parcialmente un producto
   async partialUpdate(id, fieldsToUpdate) {
     try {
       const { data, error } = await supabase
@@ -101,7 +96,6 @@ class ProductoModel {
     }
   }
 
-  // Eliminar un producto
   async delete(id) {
     try {
       const { data, error } = await supabase
@@ -118,7 +112,6 @@ class ProductoModel {
     }
   }
 
-  // Buscar productos por nombre o descripción
   async search(term) {
     try {
       const { data, error } = await supabase
@@ -133,7 +126,6 @@ class ProductoModel {
     }
   }
 
-  // Obtener productos por categoría
   async getByCategoria(categoriaId) {
     try {
       const { data, error } = await supabase
