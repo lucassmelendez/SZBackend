@@ -1,5 +1,59 @@
 const supabase = require('../config/db');
 
+// Datos simulados para cuando Supabase no esté disponible
+const productosSimulados = [
+  {
+    id_producto: 1,
+    nombre: "Raqueta Profesional X1",
+    descripcion: "Raqueta de tenis de mesa profesional con mango ergonómico",
+    precio: 89990,
+    marca: "SpinMaster",
+    peso: "180g",
+    stock: 15,
+    categoria_id: 1
+  },
+  {
+    id_producto: 2,
+    nombre: "Pelota Official Tournament",
+    descripcion: "Pelota oficial para torneos, 3 estrellas",
+    precio: 5990,
+    marca: "TableTech",
+    peso: "2.7g",
+    stock: 50,
+    categoria_id: 2
+  },
+  {
+    id_producto: 3,
+    nombre: "Mesa Plegable Pro",
+    descripcion: "Mesa de tenis de mesa plegable para competición",
+    precio: 299990,
+    marca: "SpinZone",
+    peso: "45kg",
+    stock: 5,
+    categoria_id: 3
+  },
+  {
+    id_producto: 4,
+    nombre: "Set de Raquetas Inicial",
+    descripcion: "Set de 2 raquetas ideales para principiantes",
+    precio: 24990,
+    marca: "StartSpin",
+    peso: "320g",
+    stock: 25,
+    categoria_id: 1
+  },
+  {
+    id_producto: 5,
+    nombre: "Red Profesional",
+    descripcion: "Red oficial para mesas de tenis de mesa",
+    precio: 15990,
+    marca: "NetPro",
+    peso: "500g",
+    stock: 30,
+    categoria_id: 4
+  }
+];
+
 class ProductoModel {
   async getAll() {
     try {
@@ -11,14 +65,16 @@ class ProductoModel {
         
       if (error) {
         console.error('Error de Supabase:', error);
-        throw error;
+        console.log('Usando datos simulados como fallback...');
+        return productosSimulados;
       }
       
       console.log(`Supabase devolvió ${data?.length || 0} productos`);
       return data || [];
     } catch (error) {
       console.error('Error en ProductoModel.getAll:', error);
-      throw new Error(`Error al obtener productos: ${error.message}`);
+      console.log('Usando datos simulados como fallback...');
+      return productosSimulados;
     }
   }
 
@@ -30,10 +86,22 @@ class ProductoModel {
         .eq('id_producto', id)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error de Supabase:', error);
+        const producto = productosSimulados.find(p => p.id_producto === parseInt(id));
+        if (!producto) {
+          throw new Error(`Producto con ID ${id} no encontrado`);
+        }
+        return producto;
+      }
       return data;
     } catch (error) {
-      throw new Error(`Error al obtener producto por ID: ${error.message}`);
+      console.error('Error en ProductoModel.getById:', error);
+      const producto = productosSimulados.find(p => p.id_producto === parseInt(id));
+      if (!producto) {
+        throw new Error(`Producto con ID ${id} no encontrado`);
+      }
+      return producto;
     }
   }
 
@@ -127,10 +195,24 @@ class ProductoModel {
         .select('*')
         .or(`nombre.ilike.%${term}%,descripcion.ilike.%${term}%`);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error de Supabase en search:', error);
+        const termLower = term.toLowerCase();
+        const resultados = productosSimulados.filter(p => 
+          p.nombre.toLowerCase().includes(termLower) ||
+          p.descripcion.toLowerCase().includes(termLower)
+        );
+        return resultados;
+      }
       return data;
     } catch (error) {
-      throw new Error(`Error al buscar productos: ${error.message}`);
+      console.error('Error en ProductoModel.search:', error);
+      const termLower = term.toLowerCase();
+      const resultados = productosSimulados.filter(p => 
+        p.nombre.toLowerCase().includes(termLower) ||
+        p.descripcion.toLowerCase().includes(termLower)
+      );
+      return resultados;
     }
   }
 
@@ -141,10 +223,20 @@ class ProductoModel {
         .select('*')
         .eq('categoria_id', categoriaId);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error de Supabase en getByCategoria:', error);
+        const resultados = productosSimulados.filter(p => 
+          p.categoria_id === parseInt(categoriaId)
+        );
+        return resultados;
+      }
       return data;
     } catch (error) {
-      throw new Error(`Error al obtener productos por categoría: ${error.message}`);
+      console.error('Error en ProductoModel.getByCategoria:', error);
+      const resultados = productosSimulados.filter(p => 
+        p.categoria_id === parseInt(categoriaId)
+      );
+      return resultados;
     }
   }
 }
