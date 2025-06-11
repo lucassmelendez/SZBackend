@@ -3,15 +3,22 @@ const productoModel = require('../models/productoModel');
 class ProductoController {
   async getAllProductos(req, res) {
     try {
+      console.log('Iniciando getAllProductos...');
       const productos = await productoModel.getAll();
+      console.log(`Productos obtenidos: ${productos?.length || 0}`);
+      
       res.status(200).json({
         success: true,
-        data: productos
+        data: productos || []
       });
     } catch (error) {
+      console.error('Error en getAllProductos:', error);
+      console.error('Stack trace:', error.stack);
+      
       res.status(500).json({
         success: false,
-        message: error.message
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Error al obtener productos',
+        ...(process.env.NODE_ENV === 'development' && { error: error.stack })
       });
     }
   }
