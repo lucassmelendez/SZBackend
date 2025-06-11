@@ -23,7 +23,6 @@ const corsOptions = {
       'https://sz-frontend-lucassmelendez.vercel.app',
     ];
     
-    // Permitir requests sin origin (como Postman, aplicaciones móviles, etc.)
     if (!origin) return callback(null, true);
     
     if (process.env.NODE_ENV !== 'production') {
@@ -36,48 +35,29 @@ const corsOptions = {
       return callback(null, true);
     } else {
       console.log('CORS: Origen rechazado:', origin);
-      return callback(new Error('No permitido por la política CORS'), false);
+      return callback(null, true);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   optionsSuccessStatus: 204,
   preflightContinue: false,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Protocolo: ${req.protocol}, Headers: ${req.headers['x-forwarded-proto']}, Origin: ${req.headers.origin}`);
+  console.log(`Protocolo: ${req.protocol}, Headers: ${req.headers['x-forwarded-proto']}`);
   
-  // Solo forzar HTTPS en producción y si realmente es necesario
   if (process.env.NODE_ENV === 'production' && 
-      req.headers['x-forwarded-proto'] && 
-      req.headers['x-forwarded-proto'] !== 'https' &&
-      !req.headers.host?.includes('localhost')) {
+      !req.secure && 
+      req.headers['x-forwarded-proto'] !== 'https') {
     console.log('Redirigiendo a HTTPS');
     return res.redirect(301, `https://${req.headers.host}${req.url}`);
   }
   next();
-});
-
-// Middleware para manejo de errores
-app.use((err, req, res, next) => {
-  console.error('Error en la aplicación:', err);
-  
-  if (err.message.includes('CORS')) {
-    return res.status(403).json({
-      success: false,
-      message: 'Acceso denegado por política CORS'
-    });
-  }
-  
-  res.status(500).json({
-    success: false,
-    message: 'Error interno del servidor'
-  });
 });
 
 configureWebpay();

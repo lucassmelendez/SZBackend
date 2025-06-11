@@ -3,21 +3,13 @@ const supabase = require('../config/db');
 class ProductoModel {
   async getAll() {
     try {
-      console.log('Conectando a Supabase para obtener productos...');
-      
       const { data, error } = await supabase
         .from('producto')
         .select('*');
         
-      if (error) {
-        console.error('Error de Supabase:', error);
-        throw error;
-      }
-      
-      console.log(`Supabase devolvió ${data?.length || 0} productos`);
-      return data || [];
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error en ProductoModel.getAll:', error);
       throw new Error(`Error al obtener productos: ${error.message}`);
     }
   }
